@@ -609,3 +609,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aee4de2ddbf54e349950e2da394b21e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  allowedArea:
+    serializedVersion: 2
+    x: -4.5
+    y: -4.5
+    width: 9
+    height: 9
+  maxSpeed: 10
+  maxAcceleration: 10
