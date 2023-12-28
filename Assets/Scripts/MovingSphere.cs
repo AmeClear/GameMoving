@@ -13,16 +13,23 @@ public class MovingSphere : MonoBehaviour
 
     [SerializeField, Range(0f, 1f)]
     float bounciness = 0.5f;
-    [SerializeField, Range(0f, 10f)]
+    [SerializeField, Range(0f, 10f), Header("跳跃高度")]
     float jumpHeight = 2f;
-    [SerializeField, Range(0, 5)]
+    [SerializeField, Range(0, 5), Header("空中跳跃次数限制")]
     int maxAirJumps = 0;
     [SerializeField, Range(0f, 90f)]
     float maxGroundAngle = 25f;
     float minGroundDotProduct;
     int jumpPhase;
+    /// <summary>
+    /// 跳跃状态
+    /// </summary>
     bool desiredJump = false;
-    bool onGround;
+    /// <summary>
+    /// 地面接触标量
+    /// </summary>
+    int groundContactCount;
+    bool OnGround => groundContactCount > 0;
     /// <summary>
     /// 实际速度
     /// </summary> 
@@ -31,7 +38,11 @@ public class MovingSphere : MonoBehaviour
     /// 输入速度
     /// </summary>
     Vector3 desiredVelocity;
+    /// <summary>
+    /// 玩家输入方向
+    /// </summary>
     Vector2 playerInput;
+    Vector3 contactNormal;
     Rigidbody body;
     private void Awake()
     {
@@ -52,29 +63,15 @@ public class MovingSphere : MonoBehaviour
     private void FixedUpdate()
     {
         UpdateState();
+        AdjustVelocity();
 
-        //加速度
-        float acceleration = onGround ? maxAcceleration : maxAirAcceleration;
-        float maxSpeedChange = acceleration * Time.deltaTime;
-        velocity.x =
-            Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
-        velocity.z =
-            Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
         if (desiredJump)
         {
             desiredJump = false;
             Jump();
         }
         body.velocity = velocity;
-        onGround = false;
-    }
-    void UpdateState()
-    {
-        velocity = body.velocity;
-        if (onGround)
-        {
-            jumpPhase = 0;
-        }
+        ClearState();
     }
     void OnCollisionEnter(Collision collision)
     {
@@ -87,6 +84,27 @@ public class MovingSphere : MonoBehaviour
         //onGround = true;
         EvaluateCollision(collision);
     }
+    void UpdateState()
+    {
+        velocity = body.velocity;
+        if (OnGround)
+        {
+            jumpPhase = 0;
+            if (groundContactCount > 1)
+            {
+                contactNormal.Normalize();
+            }
+        }
+        else
+        {
+            contactNormal = Vector3.up;
+        }
+    }
+    void ClearState()
+    {
+        groundContactCount = 0;
+        contactNormal = Vector3.zero;
+    }
 
 
     void EvaluateCollision(Collision collision)
@@ -94,20 +112,46 @@ public class MovingSphere : MonoBehaviour
         for (int i = 0; i < collision.contactCount; i++)
         {
             Vector3 normal = collision.GetContact(i).normal;
-            onGround |= normal.y >= minGroundDotProduct;
+            if (normal.y >= minGroundDotProduct)
+            {
+                groundContactCount += 1;
+                contactNormal += normal;
+            }
         }
     }
     void Jump()
     {
-        if (onGround || jumpPhase < maxAirJumps)
+        if (OnGround || jumpPhase < maxAirJumps)
         {
             jumpPhase += 1;
             float jumpSpeed = Mathf.Sqrt(-2f * Physics.gravity.y * jumpHeight);
-            if (velocity.y > 0f)
+            float alignedSpeed = Vector3.Dot(velocity, contactNormal);
+            if (alignedSpeed > 0f)
             {
                 jumpSpeed = Mathf.Max(jumpSpeed - velocity.y, 0f);
             }
-            velocity.y += jumpSpeed;
+            velocity += contactNormal * jumpSpeed;
         }
+    }
+    Vector3 ProjectOnContactPlane(Vector3 vector)
+    {
+        return vector - contactNormal * Vector3.Dot(vector, contactNormal);
+    }
+    void AdjustVelocity()
+    {
+        Vector3 xAxis = ProjectOnContactPlane(Vector3.right).normalized;
+        Vector3 zAxis = ProjectOnContactPlane(Vector3.forward).normalized;
+
+        float currentX = Vector3.Dot(velocity, xAxis);
+        float currentZ = Vector3.Dot(velocity, zAxis);
+
+        float acceleration = OnGround ? maxAcceleration : maxAirAcceleration;
+        float maxSpeedChange = acceleration * Time.deltaTime;
+
+        float newX =
+            Mathf.MoveTowards(currentX, desiredVelocity.x, maxSpeedChange);
+        float newZ =
+            Mathf.MoveTowards(currentZ, desiredVelocity.z, maxSpeedChange);
+        velocity += xAxis * (newX - currentX) + zAxis * (newZ - currentZ);
     }
 }
