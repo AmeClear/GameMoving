@@ -26,7 +26,7 @@ public class MovingSphere : MonoBehaviour
     /// </summary>
     bool desiredJump = false;
     /// <summary>
-    /// 地面接触标量
+    /// 地面数量
     /// </summary>
     int groundContactCount;
     bool OnGround => groundContactCount > 0;
@@ -42,6 +42,9 @@ public class MovingSphere : MonoBehaviour
     /// 玩家输入方向
     /// </summary>
     Vector2 playerInput;
+    /// <summary>
+    /// 接触法线
+    /// </summary> 
     Vector3 contactNormal;
     Rigidbody body;
     private void Awake()
@@ -55,9 +58,7 @@ public class MovingSphere : MonoBehaviour
     }
     void Update()
     {
-        playerInput.x = Input.GetAxis("Horizontal");
-        playerInput.y = Input.GetAxis("Vertical");
-        desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+        GetInputSpeed();
         desiredJump |= Input.GetKeyDown(KeyCode.Space);
     }
     private void FixedUpdate()
@@ -84,6 +85,18 @@ public class MovingSphere : MonoBehaviour
         //onGround = true;
         EvaluateCollision(collision);
     }
+    /// <summary>
+    /// 获取输入速度：输入向量*最大速度
+    /// </summary>
+    void GetInputSpeed()
+    {
+        playerInput.x = Input.GetAxis("Horizontal");
+        playerInput.y = Input.GetAxis("Vertical");
+        desiredVelocity = new Vector3(playerInput.x, 0f, playerInput.y) * maxSpeed;
+    }
+    /// <summary>
+    /// 更新状态
+    /// </summary>
     void UpdateState()
     {
         velocity = body.velocity;
@@ -100,13 +113,18 @@ public class MovingSphere : MonoBehaviour
             contactNormal = Vector3.up;
         }
     }
+    /// <summary>
+    /// 状态重置
+    /// </summary> 
     void ClearState()
     {
         groundContactCount = 0;
         contactNormal = Vector3.zero;
     }
 
-
+    /// <summary>
+    /// 碰撞处理
+    /// </summary>
     void EvaluateCollision(Collision collision)
     {
         for (int i = 0; i < collision.contactCount; i++)
@@ -119,6 +137,10 @@ public class MovingSphere : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// 跳跃处理
+    /// </summary>
     void Jump()
     {
         if (OnGround || jumpPhase < maxAirJumps)
