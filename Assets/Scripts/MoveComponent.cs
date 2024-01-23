@@ -18,6 +18,8 @@ public class MoveComponent : MonoBehaviour
     int maxAirJumps = 0;
     [SerializeField, Range(0f, 90f)]
     float maxGroundAngle = 25f;
+    [SerializeField]
+    LayerMask probeMask = -1;
     float minGroundDotProduct;
     /// <summary>
     /// 跳跃技术
@@ -108,7 +110,8 @@ public class MoveComponent : MonoBehaviour
             return false;
         }
         //光线投射
-        if (!Physics.Raycast(body.position, Vector3.down, out RaycastHit hit, probeDistance))
+        if (!Physics.Raycast(body.position, Vector3.down,
+        out RaycastHit hit, probeDistance, probeMask))
         {
             return false;
         }
