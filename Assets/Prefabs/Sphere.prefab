@@ -224,16 +224,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aee4de2ddbf54e349950e2da394b21e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allowedArea:
-    serializedVersion: 2
-    x: -5
-    y: -5
-    width: 10
-    height: 10
   maxSpeed: 10
   maxAcceleration: 10
   maxAirAcceleration: 1
-  bounciness: 0.5
+  maxSnapSpeed: 100
+  probeDistance: 1
   jumpHeight: 2
   maxAirJumps: 1
   maxGroundAngle: 25
+  probeMask:
+    serializedVersion: 2
+    m_Bits: 319
