@@ -10659,6 +10659,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4220556885929296723, guid: 284324919cf41e54ab7d9b0c5d2e0f9c, type: 3}
+      propertyPath: playerInputSpace
+      value: 
+      objectReference: {fileID: 963194228}
     - target: {fileID: 4220556885929296749, guid: 284324919cf41e54ab7d9b0c5d2e0f9c, type: 3}
       propertyPath: m_Name
       value: Sphere
